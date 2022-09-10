@@ -18,7 +18,7 @@ print("Loading classifier...")
 face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
 print("Loading camera...")
 camera = 0
-cap = cv2.VideoCapture(camera)
+cap = cv2.VideoCapture(camera,cv2.CAP_DSHOW)
 print("Setting output file...")
 filename = time.ctime(time.time()).replace(':','').replace(' ','-')
 audio_thread = None
@@ -27,8 +27,7 @@ fourcc = cv2.VideoWriter_fourcc(*'MJPG')
 fps = 10.0
 video_out = cv2.VideoWriter('temp_video'+'.avi',fourcc,fps,(640,480))
 print("Setting timestamp...")
-start_time = 0
-end_time = 0
+start_time = end_time = elapsed_time = recorded_fps = 0
 
 def TrackNRecord():
     print("Output file to be saved as: " + filename + ".avi")
@@ -85,16 +84,28 @@ def TrackNRecord():
 
         #Exit
         if cv2.waitKey(10)&0xFF== ord('q'):
-            cap.release()
+            end_time = time.time()
+            elapsed_time = end_time - start_time
+            recorded_fps = framecount / elapsed_time
             AVrecordeR.audio_thread.stop()
+            cap.release()
             cv2.destroyAllWindows()
+            while AVrecordeR.threading.active_count() > 1:
+                time.sleep(1)
             break
     
     #Muxing
     #Timing offsets, int only. Negative to delay, positive to advance
-    audio_offset = '-1.0'
+    audio_offset = '0.0'
     video_offset = '0.0'
-    start_trim = '00:00:02' #Don't Modify
-    cmd = "ffmpeg -ac 2 -channel_layout mono -itsoffset " + audio_offset + " -i temp_audio.wav -itsoffset " + video_offset + " -i temp_video.avi -ss " + start_trim + " -b:v 6M -q:v 2 -pix_fmt yuv420p -filter:v fps=10 " + filename + ".avi"
-    ffmpeg = subprocess.Popen(cmd, shell=True)
-    ffmpeg.wait()
+    start_trim = '00:00:00' #Don't Modify
+    cmd = ''
+    if abs(recorded_fps - 6) >= 0.01:
+        reencode = 'ffmpeg -r ' + str(recorded_fps) + ' -i temp_video.avi -b:v 6M -q:v 2  -pix_fmt yuv420p -r 6 temp_video2.avi' #Re-encoding
+        mux = "ffmpeg -ac 2 -channel_layout stereo -i temp_audio.wav -i temp_video2.avi -b:v 6M -q:v 2  -pix_fmt yuv420p " + filename + ".avi" #Muxing
+        subprocess.call(reencode, shell=True)
+        subprocess.call(mux, shell=True)
+    else:
+        cmd = "ffmpeg -ac 2 -channel_layout mono -itsoffset " + audio_offset + " -i temp_audio.wav -itsoffset " + video_offset + " -i temp_video.avi -ss " + start_trim + " -b:v 6M -q:v 2 -pix_fmt yuv420p -filter:v fps=10 " + filename + ".avi"
+        subprocess.Popen(cmd, shell=True)
+    
