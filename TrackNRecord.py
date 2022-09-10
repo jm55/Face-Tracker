@@ -23,7 +23,7 @@ print("Setting output file...")
 filename = time.ctime(time.time()).replace(':','').replace(' ','-')
 audio_thread = None
 video_out = None
-fourcc = cv2.VideoWriter_fourcc(*'XVID')
+fourcc = cv2.VideoWriter_fourcc(*'MJPG')
 fps = 10.0
 video_out = cv2.VideoWriter('temp_video'+'.avi',fourcc,fps,(640,480))
 print("Setting timestamp...")
