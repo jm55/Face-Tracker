@@ -84,14 +84,14 @@ def TrackNRecord():
 
         #Exit
         if cv2.waitKey(10)&0xFF== ord('q'):
+            AVrecordeR.audio_thread.stop()
             end_time = time.time()
             elapsed_time = end_time - start_time
             recorded_fps = framecount / elapsed_time
-            AVrecordeR.audio_thread.stop()
-            cap.release()
-            cv2.destroyAllWindows()
             while AVrecordeR.threading.active_count() > 1:
                 time.sleep(1)
+            cap.release()
+            cv2.destroyAllWindows()
             break
     
     #Muxing
@@ -100,12 +100,14 @@ def TrackNRecord():
     video_offset = '0.0'
     start_trim = '00:00:00' #Don't Modify
     cmd = ''
-    if abs(recorded_fps - 6) >= 0.01:
-        reencode = 'ffmpeg -r ' + str(recorded_fps) + ' -i temp_video.avi -b:v 6M -q:v 2  -pix_fmt yuv420p -r 6 temp_video2.avi' #Re-encoding
+    if abs(recorded_fps - 10) >= 0.01:
+        print('FPS mismatch')
+        reencode = 'ffmpeg -r ' + str(recorded_fps) + ' -i temp_video.avi -b:v 6M -q:v 2  -pix_fmt yuv420p -r 10 temp_video2.avi' #Re-encoding
         mux = "ffmpeg -ac 2 -channel_layout stereo -i temp_audio.wav -i temp_video2.avi -b:v 6M -q:v 2  -pix_fmt yuv420p " + filename + ".avi" #Muxing
         subprocess.call(reencode, shell=True)
         subprocess.call(mux, shell=True)
     else:
+        print('FPS match')
         cmd = "ffmpeg -ac 2 -channel_layout mono -itsoffset " + audio_offset + " -i temp_audio.wav -itsoffset " + video_offset + " -i temp_video.avi -ss " + start_trim + " -b:v 6M -q:v 2 -pix_fmt yuv420p -filter:v fps=10 " + filename + ".avi"
         subprocess.Popen(cmd, shell=True)
     
