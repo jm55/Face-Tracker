@@ -92,14 +92,8 @@ def TrackNRecord():
     
     #Muxing
     #Timing offsets, int only. Negative to delay, positive to advance
-    audio_offset = '-1.0'
+    audio_offset = '0.0'
     video_offset = '0.0'
-<<<<<<< Updated upstream
-    start_trim = '00:00:02' #Don't Modify
-    cmd = "ffmpeg -ac 2 -channel_layout mono -itsoffset " + audio_offset + " -i temp_audio.wav -itsoffset " + video_offset + " -i temp_video.avi -ss " + start_trim + " -b:v 6M -q:v 2 -pix_fmt yuv420p -filter:v fps=10 " + filename + ".avi"
-    ffmpeg = subprocess.Popen(cmd, shell=True)
-    ffmpeg.wait()
-=======
     start_trim = '00:00:00' #Don't Modify
     cmd = ''
     if abs(recorded_fps - 6) >= 0.01:
@@ -113,4 +107,3 @@ def TrackNRecord():
         cmd = "ffmpeg -ac 2 -channel_layout mono -itsoffset " + audio_offset + " -i temp_audio.wav -itsoffset " + video_offset + " -i temp_video.avi -ss " + start_trim + " -b:v 6M -q:v 2 -pix_fmt yuv420p -filter:v fps=30 " + filename + ".avi"
         c = subprocess.call(cmd, shell=True)
     
->>>>>>> Stashed changes
