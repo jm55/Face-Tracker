@@ -18,16 +18,17 @@ print("Loading classifier...")
 face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
 print("Loading camera...")
 camera = 0
-cap = cv2.VideoCapture(camera,cv2.CAP_DSHOW)
+cap = cv2.VideoCapture(camera)
 print("Setting output file...")
 filename = time.ctime(time.time()).replace(':','').replace(' ','-')
 audio_thread = None
 video_out = None
-fourcc = cv2.VideoWriter_fourcc(*'MJPG')
-fps = 10.0
+fourcc = cv2.VideoWriter_fourcc(*'XVID')
+fps = 6.0
 video_out = cv2.VideoWriter('temp_video'+'.avi',fourcc,fps,(640,480))
 print("Setting timestamp...")
-start_time = end_time = elapsed_time = recorded_fps = 0
+start_time = 0
+end_time = 0
 
 def TrackNRecord():
     print("Output file to be saved as: " + filename + ".avi")
@@ -64,7 +65,7 @@ def TrackNRecord():
         #Text data on frame
         #Just comment out what you need and don't need
         #Reference: https://stackoverflow.com/a/34273603
-        recorded_time = time.time()-start_time-2
+        recorded_time = time.time()-start_time
         framecount = framecount + 1
         fps = round(framecount/recorded_time,2)
         cv2.putText(frame, 'Frame Count: ' + str(framecount) + " (" + str(fps) + "fps)", org=(20,380), fontFace=0, fontScale=0.6, color=(255,255,255), thickness=2) #Frame Count
@@ -84,30 +85,32 @@ def TrackNRecord():
 
         #Exit
         if cv2.waitKey(10)&0xFF== ord('q'):
-            AVrecordeR.audio_thread.stop()
-            end_time = time.time()
-            elapsed_time = end_time - start_time
-            recorded_fps = framecount / elapsed_time
-            while AVrecordeR.threading.active_count() > 1:
-                time.sleep(1)
             cap.release()
+            AVrecordeR.audio_thread.stop()
             cv2.destroyAllWindows()
             break
     
     #Muxing
     #Timing offsets, int only. Negative to delay, positive to advance
-    audio_offset = '0.0'
+    audio_offset = '-1.0'
     video_offset = '0.0'
+<<<<<<< Updated upstream
+    start_trim = '00:00:02' #Don't Modify
+    cmd = "ffmpeg -ac 2 -channel_layout mono -itsoffset " + audio_offset + " -i temp_audio.wav -itsoffset " + video_offset + " -i temp_video.avi -ss " + start_trim + " -b:v 6M -q:v 2 -pix_fmt yuv420p -filter:v fps=10 " + filename + ".avi"
+    ffmpeg = subprocess.Popen(cmd, shell=True)
+    ffmpeg.wait()
+=======
     start_trim = '00:00:00' #Don't Modify
     cmd = ''
-    if abs(recorded_fps - 10) >= 0.01:
+    if abs(recorded_fps - 6) >= 0.01:
         print('FPS mismatch')
-        reencode = 'ffmpeg -r ' + str(recorded_fps) + ' -i temp_video.avi -b:v 6M -q:v 2  -pix_fmt yuv420p -r 10 temp_video2.avi' #Re-encoding
-        mux = "ffmpeg -ac 2 -channel_layout stereo -i temp_audio.wav -i temp_video2.avi -b:v 6M -q:v 2  -pix_fmt yuv420p " + filename + ".avi" #Muxing
-        subprocess.call(reencode, shell=True)
-        subprocess.call(mux, shell=True)
+        reencode = 'ffmpeg -r ' + str(recorded_fps) + ' -i temp_video.avi -b:v 6M -q:v 2  -pix_fmt yuv420p -r 6 -y temp_video2.avi' #Re-encoding
+        r = subprocess.call(reencode, shell=True)
+        mux = "ffmpeg -ac 2 -channel_layout mono -i temp_audio.wav -i temp_video2.avi -b:v 6M -q:v 2  -pix_fmt yuv420p " + filename + ".avi" #Muxing
+        m = subprocess.call(mux, shell=True)
     else:
         print('FPS match')
-        cmd = "ffmpeg -ac 2 -channel_layout mono -itsoffset " + audio_offset + " -i temp_audio.wav -itsoffset " + video_offset + " -i temp_video.avi -ss " + start_trim + " -b:v 6M -q:v 2 -pix_fmt yuv420p -filter:v fps=10 " + filename + ".avi"
-        subprocess.Popen(cmd, shell=True)
+        cmd = "ffmpeg -ac 2 -channel_layout mono -itsoffset " + audio_offset + " -i temp_audio.wav -itsoffset " + video_offset + " -i temp_video.avi -ss " + start_trim + " -b:v 6M -q:v 2 -pix_fmt yuv420p -filter:v fps=30 " + filename + ".avi"
+        c = subprocess.call(cmd, shell=True)
     
+>>>>>>> Stashed changes
