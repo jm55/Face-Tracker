@@ -113,11 +113,11 @@ class AudioRecorder():
     def __init__(self):
         
         self.open = True
-        self.rate = 44100
-        self.frames_per_buffer = 2048
-        self.channels = 1
-        self.format = pyaudio.paInt16
-        self.audio_filename = "temp_audio.wav"
+        self.rate = 44100 #DON'T MODIFY
+        self.frames_per_buffer = 2048 #DON'T MODIFY
+        self.channels = 1 #DON'T MODIFY
+        self.format = pyaudio.paInt16 #DON'T MODIFY
+        self.audio_filename = "temp_audio.wav" #DON'T MODIFY
         self.audio = pyaudio.PyAudio()
         self.stream = self.audio.open(format=self.format,
                                       channels=self.channels,
@@ -153,7 +153,6 @@ class AudioRecorder():
             waveFile.setframerate(self.rate)
             waveFile.writeframes(b''.join(self.audio_frames))
             waveFile.close()
-        
         pass
     
     # Launches the audio recording function using a thread
