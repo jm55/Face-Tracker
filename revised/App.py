@@ -1,6 +1,5 @@
-#Google Drive
-import pydrive #Install using pydrive
-
+#firebasee
+from pyrebase import pyrebase
 #OS
 import os
 
@@ -8,13 +7,22 @@ import os
 import TrackNRecord as tr
 
 def Upload(filename):
-    print("Uploading to Google Drive...")
+    print("Uploading to Firebase...")
     print("File selected: " + filename)
-    '''
-    Do Google Drive related code here
-    Suggested article: https://medium.com/analytics-vidhya/how-to-connect-google-drive-to-python-using-pydrive-9681b2a14f20
-    '''
-
+     #firebase id
+    config = {
+        #PASTE KEY CONFIG HERE
+    }
+    
+    firebase = pyrebase.initialize_app(config)
+    storage = firebase.storage()
+    
+    path_on_cloud = filename
+    path_local = filename
+    
+    storage.child(path_on_cloud).put(path_local)
+    
+    
 if __name__== "__main__":
     filename = tr.TrackNRecord() #Resulting output filename of the app.
     print("=================================================")

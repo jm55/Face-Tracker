@@ -26,14 +26,16 @@ def GetCamera():
             break
         cam.release()
         ctr+=1
-    return int(input("Enter cams (0 - " + str(ctr) + "): "))
+    return input("Enter cams (0 - " + str(ctr) + "): ")
 
 print("Setting variables...")
 print("Loading classifier...")
 face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
 print("Loading camera...")
 
-camera = GetCamera()
+
+
+camera = 0 #SET CAMERA ACCORDINGLY
 cap = cv2.VideoCapture(camera,cv2.CAP_DSHOW)
 print("Setting output file...")
 filename = time.ctime(time.time()).replace(':','').replace(' ','-')
@@ -46,7 +48,7 @@ print("Setting timestamp...")
 start_time = end_time = elapsed_time = recorded_fps = 0
 
 def TrackNRecord():
-    print("Output file to be saved as: " + filename + ".mp4")
+    print("Output file to be saved as: " + filename + ".avi")
     #Arduino Connection
     print("Connecting to Arduino...")
     #ArduinoSerial=serial.Serial('com3',9600,timeout=0.1) #PLEASE UNCOMMENT THIS
@@ -58,9 +60,8 @@ def TrackNRecord():
     #    exit(404)
     time.sleep(1)
     start_time = time.time()
-
-    AVrecordeR.start_AVrecording(filename, cams[1], fps)
-
+    AVrecordeR.ready_audio_recording()
+    AVrecordeR.audio_thread.start()
     framecount = 0
     while cap.isOpened():
         ret, frame = cap.read()
@@ -83,8 +84,8 @@ def TrackNRecord():
         #Reference: https://stackoverflow.com/a/34273603
         recorded_time = time.time()-start_time
         framecount = framecount + 1
-        realtime_fps = round(framecount/recorded_time,2)
-        cv2.putText(frame, 'FPS: ' + str(realtime_fps) + "fps", org=(20,380), fontFace=0, fontScale=0.6, color=(255,255,255), thickness=2) #FPS
+        fps = round(framecount/recorded_time,2)
+        cv2.putText(frame, 'Frame Count: ' + str(framecount) + " (" + str(fps) + "fps)", org=(20,380), fontFace=0, fontScale=0.6, color=(255,255,255), thickness=2) #Frame Count
         cv2.putText(frame, 'Arduino Track: ' + track, org=(20,420), fontFace=0, fontScale=0.6, color=(255,255,255), thickness=2) #Arduino Tracking Data
         cv2.putText(frame, 'Recorded Time: ' + time.strftime('%H:%M:%S', time.gmtime(recorded_time)), org=(20,440), fontFace=0, fontScale=0.6, color=(255,255,255), thickness=2) #Recorded Time
         cv2.putText(frame, time.ctime(time.time()), org=(20,460), fontFace=0, fontScale=0.6, color=(255,255,255), thickness=2) #Time Data
@@ -101,15 +102,31 @@ def TrackNRecord():
 
         #Exit
         if cv2.waitKey(10)&0xFF== ord('q'):
+            AVrecordeR.audio_thread.stop()
+            audio_frames = len(AVrecordeR.audio_thread.audio_frames)
+            cap.release()
+            cv2.destroyAllWindows()
+            while AVrecordeR.threading.active_count() > 1:
+                time.sleep(1)
+            end_time = time.time()
+            elapsed_time = end_time - start_time
+            recorded_fps = math.ceil(framecount / elapsed_time)
             break
-    cap.release()
-    cv2.destroyAllWindows()
-    print('Stopping recording...')
-    AVrecordeR.stop_AVrecording(filename, fps)
-    end_time = time.time()
     
-    cleanup = ["del temp_video.mp4", "del temp_video2.mp4", "del *.wav"]
-    for c in cleanup:
-        subprocess.call(c, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-
+    #Muxing
+    #Timing offsets, int only. Negative to delay, positive to advance
+    audio_offset = '0.0'
+    video_offset = '0.0'
+    start_trim = '00:00:00' #Don't Modify
+    cmd = ''
+    if abs(recorded_fps - 15) >= 0.01:
+        print('FPS mismatch')
+        reencode = 'ffmpeg -r ' + str(recorded_fps) + ' -i temp_video.avi -b:v 6M -q:v 2  -pix_fmt yuv420p -r 15 -y temp_video2.avi' #Re-encoding
+        mux = "ffmpeg -ac 2 -channel_layout mono -i temp_audio.wav -i temp_video2.avi -b:v 6M -q:v 2  -pix_fmt yuv420p " + filename + ".avi" #Muxing
+        subprocess.call(reencode, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.call(mux, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    else:
+        print('FPS match')
+        cmd = "ffmpeg -ac 2 -channel_layout mono -itsoffset " + audio_offset + " -i temp_audio.wav -itsoffset " + video_offset + " -i temp_video.avi -ss " + start_trim + " -b:v 6M -q:v 2 -pix_fmt yuv420p -filter:v fps=15 " + filename + ".avi"
+        subprocess.Popen(cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     return filename + ".avi"
