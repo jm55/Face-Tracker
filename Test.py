@@ -29,7 +29,7 @@ facecascade = load()
 #menu (single-run)
 print("====FACE DETECTION TESTING SCRIPT====")
 foldername = input("Enter folder path: ")
-mode = input("Has face (1 - Yes, 0 - No): ")
+mode = int(input("Has face (1 - Yes, 0 - No): "))
 if mode == 0:
     mode = False
 else:
@@ -60,11 +60,9 @@ for f in files:
     cls()
 rate = math.ceil((count/quantity)*100)
 
+#final print
 print("====FACE DETECTION TESTING SCRIPT====")
 print("Selected folder: " + foldername)
 print("# of files: " + str(quantity))
 print("Find face?: " + str(mode))
-if mode:
-    print("Results: " + str(rate) + "%")
-else:
-    print("Results (false positives): " + str(rate) + "%")
+print("Results: " + str(rate) + "%")
