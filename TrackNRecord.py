@@ -26,22 +26,26 @@ def GetCamera():
             break
         cam.release()
         ctr+=1
-    return int(input("Enter cams (0 - " + str(ctr) + "): "))
+    choices = []
+    choices.append(int(input("Choose cam for tracking (0 - " + str(ctr) + "): ")))
+    choices.append(int(input("Choose cam for recording (0 - " + str(ctr) + "): ")))
+    return choices
 
 print("Setting variables...")
 print("Loading classifier...")
 face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
-print("Loading camera...")
+print("Getting cameras...")
+cams = GetCamera()
 
-camera = GetCamera()
-cap = cv2.VideoCapture(camera,cv2.CAP_DSHOW)
+cap = cv2.VideoCapture(cams[0],cv2.CAP_DSHOW)
+
 print("Setting output file...")
 filename = time.ctime(time.time()).replace(':','').replace(' ','-')
-audio_thread = None
-video_out = None
+
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-fps = 15.0 #DON'T MODIFY
-video_out = cv2.VideoWriter('temp_video'+'.avi',fourcc,fps,(640,480))
+fps = 6 #DON'T MODIFY
+video_out = cv2.VideoWriter('track_video'+'.mp4',fourcc,fps,(640,480))
+
 print("Setting timestamp...")
 start_time = end_time = elapsed_time = recorded_fps = 0
 
