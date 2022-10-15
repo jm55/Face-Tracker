@@ -36,10 +36,10 @@ class VideoRecorder():
 	
 	
 	# Video class based on openCV 
-	def __init__(self):
+	def __init__(self, cam):
 		
 		self.open = True
-		self.device_index = 0
+		self.device_index = cam
 		self.fps = 6               # fps should be the minimum constant rate at which the camera can
 		self.fourcc = "MJPG"       # capture images (with no decrease in speed over time; testing is required)
 		self.frameSize = (640,480) # video formats and sizes also depend and vary according to the camera used
@@ -160,16 +160,12 @@ class AudioRecorder():
         audio_thread = threading.Thread(target=self.record)
         audio_thread.start()
 
-def ready_audio_recording():
-    global audio_thread
-    audio_thread = AudioRecorder()
-
-def start_AVrecording(filename):
+def start_AVrecording(filename, cam):
 				
 	global video_thread
 	global audio_thread
 	
-	video_thread = VideoRecorder()
+	video_thread = VideoRecorder(cam)
 	audio_thread = AudioRecorder()
 
 	audio_thread.start()
@@ -221,20 +217,19 @@ def stop_AVrecording(filename):
 #	 Merging audio and video signal
 	
 	if abs(recorded_fps - 6) >= 0.01:    # If the fps rate was higher/lower than expected, re-encode it to the expected
-										
-		#print "Re-encoding"
-		cmd = "ffmpeg -r " + str(recorded_fps) + " -i temp_video.avi -pix_fmt yuv420p -r 6 temp_video2.avi"
-		subprocess.call(cmd, shell=True)
-	
-		#print "Muxing"
-		cmd = "ffmpeg -ac 2 -channel_layout stereo -i temp_audio.wav -i temp_video2.avi -pix_fmt yuv420p " + filename + ".avi"
-		subprocess.call(cmd, shell=True)
+		reencode = "ffmpeg -r " + str(recorded_fps) + " -i temp_video.avi -pix_fmt yuv420p -r 6 temp_video2.avi"
+		mux = "ffmpeg -ac 2 -channel_layout stereo -i temp_audio.wav -i temp_video2.avi -pix_fmt yuv420p " + filename + ".avi"
+		
+		print("Re-encoding")
+		subprocess.call(reencode, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+		print("Muxing")
+		subprocess.call(mux, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 	
 	else:
 		
-		#print "Normal recording\nMuxing"
+		print("Normal recording\nMuxing")
 		cmd = "ffmpeg -ac 2 -channel_layout stereo -i temp_audio.wav -i temp_video.avi -pix_fmt yuv420p " + filename + ".avi"
-		subprocess.call(cmd, shell=True)
+		subprocess.call(cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 		#print ".."
 

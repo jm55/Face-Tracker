@@ -9,14 +9,37 @@ import serial #PLEASE UNCOMMENT THIS
 import time
 
 #Recording Libraries
-import AVrecordeR
+import AVrecordeR as av
 import subprocess
+<<<<<<< Updated upstream
 import os
+=======
+
+import math
+
+def GetCamera():
+    ctr = 0
+    cams = []
+    while True:
+        cam = cv2.VideoCapture(ctr)
+        try:
+            if cam.getBackendName() == "MSMF":
+                cams.append(ctr)
+        except:
+            break
+        cam.release()
+        ctr+=1
+    choice = []
+    choice.append(int(input("Enter cam choice for tracker (0 - " + str(ctr) + "): ")))
+    choice.append(int(input("Enter cam choice for recorder (0 - " + str(ctr) + "): ")))
+    return choice
+>>>>>>> Stashed changes
 
 print("Setting variables...")
 print("Loading classifier...")
 face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
 print("Loading camera...")
+<<<<<<< Updated upstream
 camera = 0 #SET CAMERA ACCORDINGLY
 cap = cv2.VideoCapture(camera,cv2.CAP_DSHOW)
 print("Setting output file...")
@@ -28,6 +51,17 @@ fps = 15.0 #DON'T MODIFY
 video_out = cv2.VideoWriter('temp_video'+'.avi',fourcc,fps,(640,480))
 print("Setting timestamp...")
 start_time = end_time = elapsed_time = recorded_fps = 0
+=======
+
+cams = GetCamera()
+
+camera = cams[0]
+cap = cv2.VideoCapture(camera,cv2.CAP_DSHOW)
+print("Setting output file...")
+filename = time.ctime(time.time()).replace(':','').replace(' ','-')
+fourcc = cv2.VideoWriter_fourcc(*'MJPG')
+rule_fps = 15 #DON'T MODIFY
+>>>>>>> Stashed changes
 
 def TrackNRecord():
     print("Output file to be saved as: " + filename + ".avi")
@@ -41,9 +75,12 @@ def TrackNRecord():
     #    print("Arduino Not Connected!\nExiting...")
     #    exit(404)
     time.sleep(1)
+    
     start_time = time.time()
-    AVrecordeR.ready_audio_recording()
-    AVrecordeR.audio_thread.start()
+    
+    
+    av.start_AVrecording(filename, cams[1])
+
     framecount = 0
     while cap.isOpened():
         ret, frame = cap.read()
@@ -66,8 +103,8 @@ def TrackNRecord():
         #Reference: https://stackoverflow.com/a/34273603
         recorded_time = time.time()-start_time-2
         framecount = framecount + 1
-        fps = round(framecount/recorded_time,2)
-        cv2.putText(frame, 'Frame Count: ' + str(framecount) + " (" + str(fps) + "fps)", org=(20,380), fontFace=0, fontScale=0.6, color=(255,255,255), thickness=2) #Frame Count
+        fps = round(framecount/recorded_time,0)
+        cv2.putText(frame, str(fps) + "fps", org=(20,380), fontFace=0, fontScale=0.6, color=(255,255,255), thickness=2) #FPS
         cv2.putText(frame, 'Arduino Track: ' + track, org=(20,420), fontFace=0, fontScale=0.6, color=(255,255,255), thickness=2) #Arduino Tracking Data
         cv2.putText(frame, 'Recorded Time: ' + time.strftime('%H:%M:%S', time.gmtime(recorded_time)), org=(20,440), fontFace=0, fontScale=0.6, color=(255,255,255), thickness=2) #Recorded Time
         cv2.putText(frame, time.ctime(time.time()), org=(20,460), fontFace=0, fontScale=0.6, color=(255,255,255), thickness=2) #Time Data
@@ -79,18 +116,15 @@ def TrackNRecord():
         window_title = "Face Tracker"
         cv2.imshow(window_title, frame)
 
-        #Write output as video or image
-        video_out.write(frame) #Video
-
         #Exit
         if cv2.waitKey(10)&0xFF== ord('q'):
-            AVrecordeR.audio_thread.stop()
-            audio_frames = len(AVrecordeR.audio_thread.audio_frames)
             cap.release()
             cv2.destroyAllWindows()
-            while AVrecordeR.threading.active_count() > 1:
-                time.sleep(1)
+            av.stop_AVrecording(filename)
+            #while av.threading.active_count() > 1:
+                #time.sleep(1)
             end_time = time.time()
+<<<<<<< Updated upstream
             elapsed_time = end_time - start_time
             recorded_fps = framecount / elapsed_time
             break
@@ -112,3 +146,8 @@ def TrackNRecord():
         cmd = "ffmpeg -ac 2 -channel_layout mono -itsoffset " + audio_offset + " -i temp_audio.wav -itsoffset " + video_offset + " -i temp_video.avi -ss " + start_trim + " -b:v 6M -q:v 2 -pix_fmt yuv420p -filter:v fps=15 " + filename + ".avi"
         subprocess.Popen(cmd, shell=True)
     
+=======
+            break
+    
+    return filename + ".avi"
+>>>>>>> Stashed changes
