@@ -36,14 +36,14 @@ class VideoRecorder():
 	
 	
 	# Video class based on openCV 
-	def __init__(self, cam):
+	def __init__(self, cam, fps):
 		
 		self.open = True
 		self.device_index = cam
-		self.fps = 6               # fps should be the minimum constant rate at which the camera can
-		self.fourcc = "MJPG"       # capture images (with no decrease in speed over time; testing is required)
+		self.fps = fps               # fps should be the minimum constant rate at which the camera can
+		self.fourcc = "mp4v"       # capture images (with no decrease in speed over time; testing is required)
 		self.frameSize = (640,480) # video formats and sizes also depend and vary according to the camera used
-		self.video_filename = "temp_video.avi"
+		self.video_filename = "temp_video.mp4"
 		self.video_cap = cv2.VideoCapture(self.device_index)
 		self.video_writer = cv2.VideoWriter_fourcc(*self.fourcc)
 		self.video_out = cv2.VideoWriter(self.video_filename, self.video_writer, self.fps, self.frameSize)
@@ -160,12 +160,12 @@ class AudioRecorder():
         audio_thread = threading.Thread(target=self.record)
         audio_thread.start()
 
-def start_AVrecording(filename, cam):
+def start_AVrecording(filename, cam, fps):
 				
 	global video_thread
 	global audio_thread
 	
-	video_thread = VideoRecorder(cam)
+	video_thread = VideoRecorder(cam, fps)
 	audio_thread = AudioRecorder()
 
 	audio_thread.start()
@@ -195,40 +195,37 @@ def start_audio_recording(filename):
 
 	return filename
 
-
-
-
-def stop_AVrecording(filename):
+def stop_AVrecording(filename, fps):
 	
 	audio_thread.stop() 
+	video_thread.stop() 
+	
 	frame_counts = video_thread.frame_counts
 	elapsed_time = time.time() - video_thread.start_time
 	recorded_fps = frame_counts / elapsed_time
-	#print "total frames " + str(frame_counts)
-	#print "elapsed time " + str(elapsed_time)
-	#print "recorded fps " + str(recorded_fps)
-	video_thread.stop() 
+
+	print("Total frames " + str(frame_counts))
+	print("Elapsed time " + str(elapsed_time))
+	print("Recorded FPS " + str(recorded_fps))
 
 	# Makes sure the threads have finished
 	while threading.active_count() > 1:
 		time.sleep(1)
 
-	
 #	 Merging audio and video signal
 	
-	if abs(recorded_fps - 6) >= 0.01:    # If the fps rate was higher/lower than expected, re-encode it to the expected
-		reencode = "ffmpeg -r " + str(recorded_fps) + " -i temp_video.avi -pix_fmt yuv420p -r 6 temp_video2.avi"
-		mux = "ffmpeg -ac 2 -channel_layout stereo -i temp_audio.wav -i temp_video2.avi -pix_fmt yuv420p " + filename + ".avi"
-		
-		print("Re-encoding")
+	if abs(recorded_fps - fps) >= 0.01:    # If the fps rate was higher/lower than expected, re-encode it to the expected
+		reencode = "ffmpeg -r " + str(recorded_fps) + " -i temp_video.mp4 -b:v 6M -q:v 2 -pix_fmt yuv420p -r " + str(fps) + " temp_video2.mp4"
+		mux = "ffmpeg -ac 2 -channel_layout stereo -i temp_audio.wav -i temp_video2.mp4 -b:v 6M -q:v 2 -pix_fmt yuv420p " + filename + ".mp4"
+		print("Re-encoding...")
 		subprocess.call(reencode, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-		print("Muxing")
+		print("Muxing...")
 		subprocess.call(mux, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 	
 	else:
 		
 		print("Normal recording\nMuxing")
-		cmd = "ffmpeg -ac 2 -channel_layout stereo -i temp_audio.wav -i temp_video.avi -pix_fmt yuv420p " + filename + ".avi"
+		cmd = "ffmpeg -ac 2 -channel_layout stereo -i temp_audio.wav -i temp_video.mp4 -pix_fmt yuv420p " + filename + ".mp4"
 		subprocess.call(cmd, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 		#print ".."
@@ -244,14 +241,14 @@ def file_manager(filename):
 	if os.path.exists(str(local_path) + "/temp_audio.wav"):
 		os.remove(str(local_path) + "/temp_audio.wav")
 	
-	if os.path.exists(str(local_path) + "/temp_video.avi"):
-		os.remove(str(local_path) + "/temp_video.avi")
+	if os.path.exists(str(local_path) + "/temp_video.mp4"):
+		os.remove(str(local_path) + "/temp_video.mp4")
 
-	if os.path.exists(str(local_path) + "/temp_video2.avi"):
-		os.remove(str(local_path) + "/temp_video2.avi")
+	if os.path.exists(str(local_path) + "/temp_video2.mp4"):
+		os.remove(str(local_path) + "/temp_video2.mp4")
 
-	if os.path.exists(str(local_path) + "/" + filename + ".avi"):
-		os.remove(str(local_path) + "/" + filename + ".avi")
+	if os.path.exists(str(local_path) + "/" + filename + ".mp4"):
+		os.remove(str(local_path) + "/" + filename + ".mp4")
 	
 	
 

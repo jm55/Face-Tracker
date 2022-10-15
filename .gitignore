@@ -154,3 +154,4 @@ cython_debug/
 #Skip rendered files
 *.avi
 *.wav
+*.mp4

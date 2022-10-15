@@ -43,8 +43,8 @@ print("Setting output file...")
 filename = time.ctime(time.time()).replace(':','').replace(' ','-')
 
 fourcc = cv2.VideoWriter_fourcc(*'MJPG')
-fps = 15.0 #DON'T MODIFY
-video_out = cv2.VideoWriter('temp_video'+'.avi',fourcc,fps,(640,480))
+fps = 6 #DON'T MODIFY
+video_out = cv2.VideoWriter('track_video'+'.avi',fourcc,fps,(640,480))
 
 print("Setting timestamp...")
 start_time = end_time = elapsed_time = recorded_fps = 0
@@ -63,7 +63,7 @@ def TrackNRecord():
     time.sleep(1)
     start_time = time.time()
 
-    AVrecordeR.start_AVrecording(filename, cams[1])
+    AVrecordeR.start_AVrecording(filename, cams[1], fps)
 
     framecount = 0
     while cap.isOpened():
@@ -87,8 +87,8 @@ def TrackNRecord():
         #Reference: https://stackoverflow.com/a/34273603
         recorded_time = time.time()-start_time
         framecount = framecount + 1
-        fps = round(framecount/recorded_time,2)
-        cv2.putText(frame, 'FPS: ' + str(fps) + "fps", org=(20,380), fontFace=0, fontScale=0.6, color=(255,255,255), thickness=2) #FPS
+        realtime_fps = round(framecount/recorded_time,2)
+        cv2.putText(frame, 'FPS: ' + str(realtime_fps) + "fps", org=(20,380), fontFace=0, fontScale=0.6, color=(255,255,255), thickness=2) #FPS
         cv2.putText(frame, 'Arduino Track: ' + track, org=(20,420), fontFace=0, fontScale=0.6, color=(255,255,255), thickness=2) #Arduino Tracking Data
         cv2.putText(frame, 'Recorded Time: ' + time.strftime('%H:%M:%S', time.gmtime(recorded_time)), org=(20,440), fontFace=0, fontScale=0.6, color=(255,255,255), thickness=2) #Recorded Time
         cv2.putText(frame, time.ctime(time.time()), org=(20,460), fontFace=0, fontScale=0.6, color=(255,255,255), thickness=2) #Time Data
@@ -108,10 +108,7 @@ def TrackNRecord():
             break
     cap.release()
     cv2.destroyAllWindows()
-    AVrecordeR.stop_AVrecording(filename)
-    while AVrecordeR.threading.active_count() > 1:
-        time.sleep(1)
+    print('Stopping recording...')
+    AVrecordeR.stop_AVrecording(filename, fps)
     end_time = time.time()
-    elapsed_time = end_time - start_time
-    recorded_fps = math.ceil(framecount / elapsed_time)
     return filename + ".avi"
