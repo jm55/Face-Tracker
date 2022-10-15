@@ -42,15 +42,15 @@ cap = cv2.VideoCapture(cams[0],cv2.CAP_DSHOW)
 print("Setting output file...")
 filename = time.ctime(time.time()).replace(':','').replace(' ','-')
 
-fourcc = cv2.VideoWriter_fourcc(*'MJPG')
+fourcc = cv2.VideoWriter_fourcc(*'mp4v')
 fps = 6 #DON'T MODIFY
-video_out = cv2.VideoWriter('track_video'+'.avi',fourcc,fps,(640,480))
+video_out = cv2.VideoWriter('track_video'+'.mp4',fourcc,fps,(640,480))
 
 print("Setting timestamp...")
 start_time = end_time = elapsed_time = recorded_fps = 0
 
 def TrackNRecord():
-    print("Output file to be saved as: " + filename + ".avi")
+    print("Output file to be saved as: " + filename + ".mp4")
     #Arduino Connection
     print("Connecting to Arduino...")
     #ArduinoSerial=serial.Serial('com3',9600,timeout=0.1) #PLEASE UNCOMMENT THIS
@@ -111,4 +111,9 @@ def TrackNRecord():
     print('Stopping recording...')
     AVrecordeR.stop_AVrecording(filename, fps)
     end_time = time.time()
+    
+    cleanup = ["del temp_video.mp4", "del temp_video2.mp4", "del *.wav"]
+    for c in cleanup:
+        subprocess.call(c, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
     return filename + ".avi"
