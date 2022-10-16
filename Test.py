@@ -36,11 +36,14 @@ facecascade = load()
 cls()
 print("====FACE DETECTION TESTING SCRIPT====")
 foldername = input("Enter folder path: ")
+multiple = False
 mode = int(input("Has face (1 - Yes, 0 - No): "))
 if mode == 0:
     mode = False
 else:
     mode = True
+    if int(input("Find multiple faces? (1 - Yes, 0 - No): ")) == 0:
+        multiple = True
 files = os.listdir(foldername)
 quantity = len(files)
 
@@ -53,8 +56,11 @@ for f in files:
     completed = math.ceil((ctr/quantity)*100)
     printDisplay(foldername, mode, completed, ctr, quantity)
     faces = checkImage(facecascade, foldername+"\\"+f)
-    if mode and faces > 0: #find faces
-        count += 1
+    if mode: #find faces
+        if multiple and faces > 1: #multiple faces
+            count += 1
+        else: #1 face only
+            count += 1
     else:
         if faces == 0:
             count += 1
