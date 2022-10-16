@@ -70,7 +70,7 @@ def TrackNRecord():
         ret, frame = cap.read()
         frame = cv2.flip(frame,1)
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        faces = face_cascade.detectMultiScale(gray, 1.1,6)
+        faces = face_cascade.detectMultiScale(gray, 1.1, 6) #refer here for parameter explanation: https://stackoverflow.com/a/20805153
         track = ""
         for x,y,w,h in faces:
             track = 'X{0:d}Y{1:d}'.format((x+w//2),(y+h//2))
