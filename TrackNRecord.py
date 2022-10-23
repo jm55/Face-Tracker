@@ -98,6 +98,8 @@ def TrackNRecord():
             cv2.putText(frame, 'Face Count: ' + str(len(faces)), org=(20,400), fontFace=0, fontScale=0.6, color=(255,255,255), thickness=2) #Face Tracking Data
         #Camera Window
         window_title = "Face Tracker"
+        cv2.namedWindow(window_title, cv2.WINDOW_NORMAL)
+        cv2.resizeWindow(window_title, 1280, 720)
         cv2.imshow(window_title, frame)
 
         #Write output as video or image
