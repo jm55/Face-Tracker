@@ -16,6 +16,7 @@ The program was not tested completely with many people but was once tested to be
 4. Tracking and recording functions are threaded separately on their own OpenCV instances (Yes, we know that OpenCV wasn't meant for recording). Using a single camera for both tracking and recording causes A/V time mismatch, thus it would be best if it was separated.
 
 **Execution/Notes:**
+
 0. Dependencies: Execute `Install.bat` batch script using the terminal to install dependencies of the project. (Just type `Install.bat`)
 1. Main Application:
 	1. Plug cameras 
