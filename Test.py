@@ -42,7 +42,7 @@ if mode == 0:
     mode = False
 else:
     mode = True
-    if int(input("Find multiple faces? (1 - Yes, 0 - No): ")) == 0:
+    if int(input("Find multiple faces only? (1 - Yes, 0 - No): ")) == 0:
         multiple = True
 files = os.listdir(foldername)
 quantity = len(files)
