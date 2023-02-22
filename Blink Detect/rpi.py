@@ -25,19 +25,19 @@ min_time = 3
 
 #Loading eye tracker regardless
 eye_detect = detect()
-eye_detect.run()
+#eye_detect.run()
 
 state = 0
 while True:
-	state = eye_detect.getState()
-	print("State: ", state)
+	#state = eye_detect.getState()
+	#print("State: ", state)
 	data = "A" #TEMPORARY REPLACEMENT WHILE TESTING THREADING
 	#data = ser.read()  # read a single byte of data from the Arduino
 	ch = ""
-	'''try:
+	try:
 		ch = data.decode('utf-8')
 	except:
-		time.sleep(0)'''
+		time.sleep(0)
 	#print(data,ch)
 	#check
 	letters = (ch >= 'a' and ch <= 'z') or (ch >= 'A' and ch <= 'Z')
@@ -68,6 +68,9 @@ while True:
 					print("Acceptable alcohol range...")
 					#pwm.ChangeDutyCycle(7) #assumes as open
 					time.sleep(1)
+					if not eye_detect.isRunning():
+						eye_detect.run()
+					state = eye_detect.getState()
 					if state == 0 or state == -1: # press q
 						#pwm.ChangeDutyCycle(2.5)
 						time.sleep(1)
@@ -79,6 +82,9 @@ while True:
 			if temp == "emergency":
 				#pwm.ChangeDutyCycle(7) #assumes as open
 				time.sleep(1)
+				if not eye_detect.isRunning():
+						eye_detect.run()
+				state = eye_detect.getState()
 				if state == 0 or state == -1:
 					#pwm.ChangeDutyCycle(2.5)
 					time.sleep(1)
