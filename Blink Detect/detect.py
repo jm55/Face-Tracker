@@ -2,9 +2,7 @@
 # coding: utf-8
 
 import cv2
-import numpy as np
 import time
-import datetime
 import threading
 
 class detect:
@@ -12,17 +10,28 @@ class detect:
 	state = 0
 	thread = None
 	ret = None
+	def __init__(self):
+		self.thread = threading.Thread(target=self.eye)
+		print("Eye detect init.")
+	
 	def stop_eye(self):
 		self.ret = None
 		if self.cap != None:
 			self.cap.release()
 			cv2.destroyAllWindows()
 		self.state = -1
-		#self.thread.join()
+		try:
+			self.thread.join()
+		except:
+			time.sleep(0)
 	def run(self):
-		self.thread = threading.Thread(target=self.eye)
+		print("Running camera thread")
 		self.thread.start()
-
+		print("Camera thread: ", self.isRunning())
+	
+	def resetState(self):
+		self.state = 0
+	
 	def isRunning(self):
 		return self.thread.is_alive()
 
@@ -45,7 +54,7 @@ class detect:
 		end = time.time()
 		time_diff = 0.0
 		capture_time = 2
-		blink_limit = 5
+		blink_limit = 3
 
 		while self.ret:
 				# this will keep the web-cam running and capturing the image for every loop
@@ -83,22 +92,16 @@ class detect:
 							else:
 								cv2.putText(image, "Eyes Open", (25,35), cv2.FONT_HERSHEY_SIMPLEX, .5, (255, 255, 255), 2)
 						else: #eyes not found
-							if first_read:
-								cv2.putText(image, "No Eyes Detected", (25,35), cv2.FONT_HERSHEY_SIMPLEX, .5, (255, 0, 255), 2)
-							else: #Not first read
-								if time_diff >= capture_time: #Will trigger only if 5s has been reached
-									cv2.putText(image, "Long Blink Detected! (Eyes closed at " + str(round(time_diff,2)) + "s)", (25,35), cv2.FONT_HERSHEY_SIMPLEX, .5, (0, 0, 0), 2)
-									blink_frame = image #Make a copy of the frame at blink capture so that it won't move with the continous camera feeds
-									start = time.time() #Reset time to current time
-									blink_counter = blink_counter + 1
-									print("Blink detected!")
-									if blink_counter >= blink_limit:
-										print("Blink Limit reached")
-										self.state = blink_counter
-									cv2.putText(image, "Long Blinks Detected: " + str(blink_counter), (440,70), cv2.FONT_HERSHEY_SIMPLEX, .5, (0, 0, 0), 2)
-									cv2.putText(image, time.ctime(end), (10,460), cv2.FONT_HERSHEY_SIMPLEX, .5, (0, 0, 0), 2)
-									#print("Image saved: ", cv2.imwrite(str(time.ctime(end).replace(":","").replace(" ",""))+".jpg",blink_frame))
-									#cv2.imshow("Captured Blink", blink_frame) #Show captured frame
+							if time_diff >= capture_time: #Will trigger only if 5s has been reached
+								cv2.putText(image, "Long Blink Detected! (Eyes closed at " + str(round(time_diff,2)) + "s)", (25,35), cv2.FONT_HERSHEY_SIMPLEX, .5, (0, 0, 0), 2)
+								blink_frame = image #Make a copy of the frame at blink capture so that it won't move with the continous camera feeds
+								start = time.time() #Reset time to current time
+								blink_counter = blink_counter + 1
+								print("Blink detected!")
+								self.state = blink_counter
+								cv2.putText(image, "Long Blinks Detected: " + str(blink_counter), (440,70), cv2.FONT_HERSHEY_SIMPLEX, .5, (0, 0, 0), 2)
+								cv2.putText(image, time.ctime(end), (10,460), cv2.FONT_HERSHEY_SIMPLEX, .5, (0, 0, 0), 2)									#print("Image saved: ", cv2.imwrite(str(time.ctime(end).replace(":","").replace(" ",""))+".jpg",blink_frame))
+								#cv2.imshow("Captured Blink", blink_frame) #Show captured frame
 			else:
 				cv2.putText(image, "No Face Detected.", (20,35), cv2.FONT_HERSHEY_SIMPLEX, .5, (0, 255, 255), 2)
 			#cv2.putText(image, "Instructions: q/Q - Quit, s/S Start Blink Capture, r/R - Reset Blink Counter", (10,425), cv2.FONT_HERSHEY_SIMPLEX, .5, (0, 0, 0), 2)
